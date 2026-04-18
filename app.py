@@ -104,7 +104,11 @@ model, vectorizer = load_model()
 # =====================================================
 # LOAD USER DATA
 # =====================================================
-records = pd.read_csv(records_file)
+@st.cache_data(ttl=5)
+def load_records():
+    return pd.read_csv(records_file)
+
+records = load_records()
 
 with open(budget_file, "r") as f:
     budget = int(f.read())
