@@ -58,10 +58,6 @@ div[data-testid="metric-container"]{
     padding:18px;
     border-radius:16px;
 }
-hr{
-    margin-top:0.5rem;
-    margin-bottom:1rem;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,6 +68,7 @@ records_file = "records.csv"
 budget_file = "budget.txt"
 training_file = "expenses.csv"
 
+# create files if missing
 if not os.path.exists(records_file):
     pd.DataFrame(
         columns=["Date", "Expense", "Amount", "Category"]
@@ -84,17 +81,14 @@ if not os.path.exists(budget_file):
 # =====================================================
 # LOAD TRAINING DATA
 # =====================================================
-train = pd.read_csv(
-    training_file,
-    on_bad_lines="skip"
-)
+train = pd.read_csv(training_file, on_bad_lines="skip")
 
 X = train["Description"].astype(str)
 y = train["Category"].astype(str)
 
 vectorizer = TfidfVectorizer(
     analyzer="char_wb",
-    ngram_range=(2,5)
+    ngram_range=(2, 5)
 )
 
 X_vec = vectorizer.fit_transform(X)
@@ -116,8 +110,6 @@ with open(budget_file, "r") as f:
 st.title("💸 AI Expense Manager Pro")
 st.caption("Smart finance dashboard powered by Artificial Intelligence")
 
-st.markdown("<hr>", unsafe_allow_html=True)
-
 # =====================================================
 # TABS
 # =====================================================
@@ -132,7 +124,7 @@ with tab1:
 
     st.subheader("Add New Expense")
 
-    c1, c2 = st.columns([2,1])
+    c1, c2 = st.columns([2, 1])
 
     with c1:
         expense = st.text_input(
@@ -148,7 +140,6 @@ with tab1:
         )
 
     categories = sorted(list(train["Category"].unique()))
-
     predicted_category = categories[0]
     confidence_level = ""
 
@@ -194,7 +185,6 @@ with tab1:
 
         if clean_expense and amount > 0:
 
-            # Save record
             new_row = pd.DataFrame(
                 [[
                     datetime.now().strftime("%Y-%m-%d"),
@@ -202,16 +192,16 @@ with tab1:
                     amount,
                     selected_category
                 ]],
-                columns=["Date","Expense","Amount","Category"]
+                columns=["Date", "Expense", "Amount", "Category"]
             )
 
             records = pd.concat([records, new_row], ignore_index=True)
             records.to_csv(records_file, index=False)
 
-            # Learn from user choice
+            # self learning
             learn_row = pd.DataFrame(
                 [[clean_expense, selected_category]],
-                columns=["Description","Category"]
+                columns=["Description", "Category"]
             )
 
             learn_row.to_csv(
@@ -225,11 +215,7 @@ with tab1:
             st.success(
                 f"Added • {clean_expense} • ₹{amount} • {selected_category}"
             )
-
             st.rerun()
-
-        else:
-            st.warning("Enter valid expense and amount.")
 
 # =====================================================
 # EMPTY CHECK
@@ -248,7 +234,7 @@ if len(records) == 0:
     st.stop()
 
 # =====================================================
-# COMMON CALCULATIONS
+# CALCULATIONS
 # =====================================================
 records["Amount"] = pd.to_numeric(
     records["Amount"],
@@ -280,27 +266,24 @@ with tab2:
 
     display_records = records.copy()
 
-    display_records["Date"] = pd.to_datetime(
-        display_records["Date"],
-        errors="coerce"
-    ).dt.strftime("%d %b %Y")
+    display_records["Date"] = display_records["Date"].dt.strftime("%d %b %Y")
 
     display_records.insert(
         0,
         "No.",
-        range(1, len(display_records)+1)
+        range(1, len(display_records) + 1)
     )
 
     st.dataframe(
         display_records,
         use_container_width=True,
-        height=360,
-        hide_index=True
+        hide_index=True,
+        height=360
     )
 
     st.markdown("### Delete Record")
 
-    d1, d2 = st.columns([3,1])
+    d1, d2 = st.columns([3, 1])
 
     with d1:
 
@@ -343,20 +326,32 @@ with tab3:
     with left:
 
         fig = px.pie(
-    values=category_summary.values,
-    names=category_summary.index,
-    title="Spending by Category"
+            values=category_summary.values,
+            names=category_summary.index,
+            title="Spending by Category"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    with right:
+
+        bar = px.bar(
+            x=category_summary.index,
+            y=category_summary.values,
+            labels={"x": "Category", "y": "Amount"},
+            title="Category Comparison"
+        )
+
+        st.plotly_chart(bar, use_container_width=True)
+
+    line = px.line(
+        x=daily.index,
+        y=daily.values,
+        labels={"x": "Date", "y": "Amount"},
+        title="Daily Spending Trend"
     )
 
-    st.plotly_chart(fig, use_container_width=True)
-
-with right:
-
-        st.markdown("**Category Comparison**")
-        st.bar_chart(category_summary)
-
-        st.markdown("**Daily Spending Trend**")
-        st.line_chart(daily)
+    st.plotly_chart(line, use_container_width=True)
 
 # =====================================================
 # TAB 4 - BUDGET & AI
@@ -375,8 +370,6 @@ with tab4:
 
     with m3:
         st.metric("🏆 Top Category", top_category)
-
-    st.markdown("<hr>", unsafe_allow_html=True)
 
     new_budget = st.number_input(
         "Monthly Budget ₹",
@@ -400,31 +393,19 @@ with tab4:
     else:
         st.success("You are within budget.")
 
-    st.markdown("<hr>", unsafe_allow_html=True)
-
-    st.subheader("AI Suggestions")
+    st.markdown("### AI Suggestions")
 
     if top_category == "Food & Dining":
-        st.info(
-            f"Highest spend is Food & Dining (₹{top_amount}). Reduce outside meals."
-        )
+        st.info("You spend most on food. Reduce eating out to save more.")
 
     elif top_category == "Transport":
-        st.info(
-            f"Transport leads spending (₹{top_amount}). Use pooling or metro."
-        )
+        st.info("Transport spending is highest. Try metro or ride pooling.")
 
     elif top_category == "Shopping & Retail":
-        st.info(
-            f"Shopping is highest (₹{top_amount}). Delay impulse buying."
-        )
+        st.info("Shopping is highest. Delay impulse purchases.")
 
     elif top_category == "Entertainment":
-        st.info(
-            f"Entertainment tops spending (₹{top_amount}). Review subscriptions."
-        )
+        st.info("Entertainment leads spending. Review subscriptions.")
 
     else:
-        st.info(
-            f"Top category is {top_category} (₹{top_amount}). Track it closely."
-        )
+        st.info(f"Top category is {top_category}. Keep tracking it.")
