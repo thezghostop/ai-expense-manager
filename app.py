@@ -342,13 +342,11 @@ with tab3:
 
     with left:
 
-        st.markdown("**Spending by Category**")
-
         fig = px.pie(
     values=category_summary.values,
     names=category_summary.index,
     title="Spending by Category"
-)
+    )
 
 st.plotly_chart(fig, use_container_width=True)
 
