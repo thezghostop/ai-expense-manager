@@ -81,21 +81,26 @@ if not os.path.exists(budget_file):
 # =====================================================
 # LOAD TRAINING DATA
 # =====================================================
-train = pd.read_csv(training_file, on_bad_lines="skip")
+@st.cache_resource
+def load_model():
+    train = pd.read_csv(training_file, on_bad_lines="skip")
 
-X = train["Description"].astype(str)
-y = train["Category"].astype(str)
+    X = train["Description"].astype(str)
+    y = train["Category"].astype(str)
 
-vectorizer = TfidfVectorizer(
-    analyzer="char_wb",
-    ngram_range=(2, 5)
-)
+    vectorizer = TfidfVectorizer(
+        analyzer="char_wb",
+        ngram_range=(2,5)
+    )
 
-X_vec = vectorizer.fit_transform(X)
+    X_vec = vectorizer.fit_transform(X)
 
-model = LogisticRegression(max_iter=3000)
-model.fit(X_vec, y)
+    model = LogisticRegression(max_iter=3000)
+    model.fit(X_vec, y)
 
+    return model, vectorizer
+
+model, vectorizer = load_model()
 # =====================================================
 # LOAD USER DATA
 # =====================================================
