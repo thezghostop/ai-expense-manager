@@ -348,7 +348,7 @@ with tab3:
     title="Spending by Category"
     )
 
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
     with right:
 
