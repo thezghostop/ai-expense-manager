@@ -350,7 +350,7 @@ with tab3:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    with right:
+with right:
 
         st.markdown("**Category Comparison**")
         st.bar_chart(category_summary)
