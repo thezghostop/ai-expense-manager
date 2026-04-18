@@ -344,19 +344,13 @@ with tab3:
 
         st.markdown("**Spending by Category**")
 
-        fig1, ax1 = plt.subplots(figsize=(3.2,3.2))
+        fig = px.pie(
+    values=category_summary.values,
+    names=category_summary.index,
+    title="Spending by Category"
+)
 
-        ax1.pie(
-            category_summary,
-            labels=category_summary.index,
-            autopct="%1.1f%%",
-            startangle=90,
-            textprops={"fontsize":8}
-        )
-
-        ax1.axis("equal")
-
-        st.pyplot(fig1, use_container_width=False)
+st.plotly_chart(fig, use_container_width=True)
 
     with right:
 
