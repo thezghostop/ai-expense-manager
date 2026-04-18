@@ -355,8 +355,8 @@ with right:
         st.markdown("**Category Comparison**")
         st.bar_chart(category_summary)
 
-    st.markdown("**Daily Spending Trend**")
-    st.line_chart(daily)
+        st.markdown("**Daily Spending Trend**")
+        st.line_chart(daily)
 
 # =====================================================
 # TAB 4 - BUDGET & AI
